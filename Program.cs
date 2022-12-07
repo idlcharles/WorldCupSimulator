@@ -14,21 +14,31 @@ app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
-app.MapGet("/Teams/{id}", async (WorldCupContext context, Guid id) =>
+app.MapGet("/api/Teams/groups", async (WorldCupContext context) =>
+{
+    var teams = await context.Teams.ToListAsync();
+    var groups = teams.GroupBy(p => p.Group)
+    .OrderBy(p => p.Key)
+    .Select(p => p.Select(p => p));
+
+    return Results.Ok(groups);
+});
+
+app.MapGet("/api/Teams/{id}", async (WorldCupContext context, Guid id) =>
 {
     var team = await context.Teams.FindAsync(id);
 
     return Results.Ok(team);
 });
 
-app.MapGet("/Teams", async (WorldCupContext context) =>
+app.MapGet("/api/Teams", async (WorldCupContext context) =>
 {
     var teams = await context.Teams.ToListAsync();
 
     return Results.Ok(teams);
 });
 
-app.MapPost("/teams", async (WorldCupContext context, Team team) =>
+app.MapPost("/api/teams", async (WorldCupContext context, Team team) =>
 {
    await context.Teams.AddAsync(team);
    await context.SaveChangesAsync();
@@ -36,7 +46,7 @@ app.MapPost("/teams", async (WorldCupContext context, Team team) =>
     return Results.Ok(team);
 });
 
-app.MapPut("/teams/{id}", async (WorldCupContext context, Team team) =>
+app.MapPut("/api/teams/{id}", async (WorldCupContext context, Team team) =>
 {
 var dbTeam = await context.Teams.FindAsync(team.Id);
     if (dbTeam == null)
@@ -51,7 +61,7 @@ var dbTeam = await context.Teams.FindAsync(team.Id);
     return Results.Ok(dbTeam);
 });
 
-app.MapDelete("/teams/{id}", async (WorldCupContext context, Guid id) =>
+app.MapDelete("/api/teams/{id}", async (WorldCupContext context, Guid id) =>
 {
     var dbTeam = await context.Teams.FindAsync(id);
     if (dbTeam == null)
@@ -69,5 +79,6 @@ public class Team
     public Guid Id { get; set; }
     public string Name { get; set; }
     public string Img { get; set; }
+    public int Group { get; set; }
 }
 
